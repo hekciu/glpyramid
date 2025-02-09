@@ -11,11 +11,11 @@
 
 
 #define VERTEX_SHADER_FILE_PATH "vertex_shader.vert"
+#define FRAGMENT_SHADER_FILE_PATH "fragment_shader.frag"
 
 
 struct Vertex {
     float position[3];
-    float color[3];
 };
 
 
@@ -39,35 +39,34 @@ void handle_key(GLFWwindow * window, int key, int scancode, int action, int mods
 
 void initialize_vertices(std::vector<Vertex> & vertices, uint32_t & VBO) {
     vertices.push_back({
-        { -0.5f, -0.5f, 0.0f },
-        { 1.0f, 1.0f, 1.0f }     
+        { -0.5f, -0.5f, 0.0f }
     });
 
     vertices.push_back({
-        { -0.5f, 0.5f, 0.0f },
-        { 1.0f, 1.0f, 1.0f }     
+        { 0.5f, -0.5f, 0.0f }   
     });
 
     vertices.push_back({
-        { 0.5f, 0.0f, 0.0f },
-        { 1.0f, 1.0f, 1.0f }     
+        { 0.0f, 0.5f, 0.0f }   
     });
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     Vertex * rawVertices = vertices.data();
-    glBufferData(GL_ARRAY_BUFFER, sizeof(rawVertices), rawVertices, GL_STATIC_DRAW);
+    size_t verticesSize = vertices.size() * sizeof(Vertex);
+
+    glBufferData(GL_ARRAY_BUFFER, verticesSize, rawVertices, GL_STATIC_DRAW);
 };
 
 
-std::string get_vertex_shader() {
+std::string get_shader(const char * fileName) {
     std::ifstream ifs;
-    ifs.open(VERTEX_SHADER_FILE_PATH, std::ifstream::in);
+    ifs.open(fileName, std::ifstream::in);
     std::string content = "";
 
     if(!ifs.is_open()) {
-        printf("failed to open vertex shader file :(\n");
+        printf("failed to open shader file :( path: %s\n", fileName);
         return content;
     }
 
@@ -82,8 +81,8 @@ std::string get_vertex_shader() {
 }
 
 
-void render_stuff(GLFWwindow * window, const std::vector<Vertex> & vertices) {
-
+void render_stuff() {
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 
@@ -114,27 +113,74 @@ int main(void) {
 
     initialize_vertices(vertices, VBO); 
 
-    std::string vertexShaderSource = get_vertex_shader();
+    std::string vertexShaderSource = get_shader(VERTEX_SHADER_FILE_PATH);
     const char * vertexShaderSourceRaw = vertexShaderSource.c_str();
+
+    std::string fragmentShaderSource = get_shader(FRAGMENT_SHADER_FILE_PATH);
+    const char * fragmentShaderSourceRaw = fragmentShaderSource.c_str();
+
+    int compiledSuccessfully;
+    char infoLog[512];
 
     uint32_t vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSourceRaw, NULL);
     glCompileShader(vertexShader);
 
-    int compiledSuccessfully;
-    char infoLog[512];
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &compiledSuccessfully);
     if (!compiledSuccessfully) {
         glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
         printf("Shader compilation failed, info: %s\n", infoLog);
+        return 1;
     }
+
+    uint32_t fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSourceRaw, NULL);
+    glCompileShader(fragmentShader);
+
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compiledSuccessfully);
+    if (!compiledSuccessfully) {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        printf("Shader compilation failed, info: %s\n", infoLog);
+        return 1;
+    }
+
+
+    uint32_t shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &compiledSuccessfully);
+    if (!compiledSuccessfully) {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        printf("Program linking failed, info: %s\n", infoLog);
+        return 1;
+    }
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    uint32_t VAO;
+    glGenVertexArrays(1, &VAO);
+    
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
+    glEnableVertexAttribArray(0);
+
 
     while (!glfwWindowShouldClose(window)) {
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
         glViewport(0, 0, width, height);
 
-        render_stuff(window, vertices);
+        glUseProgram(shaderProgram);
+        glBindVertexArray(VAO);
+
+        render_stuff();
+
         glfwSwapBuffers(window);                
         glfwPollEvents();
     }
