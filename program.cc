@@ -62,21 +62,21 @@ void initialize_vertices(std::vector<Vertex> & vertices, uint32_t & VBO) {
 
 
 std::string get_vertex_shader() {
-    std::ifstream ifs(VERTEX_SHADER_FILE_PATH);
+    std::ifstream ifs;
+    ifs.open(VERTEX_SHADER_FILE_PATH, std::ifstream::in);
+    std::string content = "";
 
     if(!ifs.is_open()) {
         printf("failed to open vertex shader file :(\n");
-        return std::string("");
+        return content;
     }
 
-    std::string content;
-    std::string line;
-
-    while(getline(ifs, line)) {
+    for(std::string line; std::getline(ifs, line);) {
         content += line;
+        content.push_back('\n');
     }
 
-    std::cout << "CONTENT: " << content << "\n";
+    ifs.close();
 
     return content;
 }
@@ -114,12 +114,11 @@ int main(void) {
 
     initialize_vertices(vertices, VBO); 
 
-    const char * vertexShaderSource = get_vertex_shader().c_str();
-
-    printf("vertex shader content: %s\n", vertexShaderSource);
+    std::string vertexShaderSource = get_vertex_shader();
+    const char * vertexShaderSourceRaw = vertexShaderSource.c_str();
 
     uint32_t vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glShaderSource(vertexShader, 1, &vertexShaderSourceRaw, NULL);
     glCompileShader(vertexShader);
 
     int compiledSuccessfully;
