@@ -4,6 +4,7 @@
 #include <vector>
 #include <fstream>
 #include <string>
+#include <cmath>
 
 #define GL_GLEXT_PROTOTYPES
 
@@ -81,8 +82,38 @@ std::string get_shader(const char * fileName) {
 }
 
 
-void render_stuff() {
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+float getNextIndex(int index, bool decrease = false) {
+    const int max = 180;
+    const int min = -180;
+
+    int next = decrease ? index - 1 : index + 1;
+
+    if (next == max) {
+        return min;
+    } 
+
+    if (next == max) {
+        return min;
+    }
+
+    return (float)next;
+}
+
+
+void animate(std::vector<Vertex> & vertices, int & bottom1Index, int & bottom2Index) {
+    Vertex * bottom1 = &vertices[0];
+    Vertex * bottom2 = &vertices[1];
+
+    bool swapDecreasing = bottom1Index < 0;
+
+    bottom1Index = getNextIndex(bottom1Index, swapDecreasing);
+    bottom2Index = getNextIndex(bottom2Index, !swapDecreasing);
+ 
+    float bottom1NewVertical = std::sin(2.0f * 3.14f * (bottom1Index/(float)360)) / 2;
+    float bottom2NewVertical = std::sin(2.0f * 3.14f * (bottom2Index/(float)360)) / 2;
+
+    bottom1->position[0] = bottom1NewVertical;
+    bottom2->position[0] = bottom2NewVertical;
 }
 
 
@@ -165,21 +196,33 @@ int main(void) {
     
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
     glEnableVertexAttribArray(0);
 
+    int bottom1Index = 0; 
+    int bottom2Index = 0; 
 
     while (!glfwWindowShouldClose(window)) {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
         glViewport(0, 0, width, height);
 
+        glClearColor(0.0f, 5.0f, 1.0f, 1.0f);
+
+        animate(vertices, bottom1Index, bottom2Index);
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
+
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
 
-        render_stuff();
+
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(window);                
         glfwPollEvents();
