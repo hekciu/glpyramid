@@ -39,17 +39,58 @@ void handle_key(GLFWwindow * window, int key, int scancode, int action, int mods
 
 
 void initialize_vertices(std::vector<Vertex> & vertices, uint32_t & VBO) {
-    vertices.push_back({
-        { -0.5f, -0.5f, 0.0f }
-    });
-
-    vertices.push_back({
-        { 0.5f, -0.5f, 0.0f }   
-    });
-
+    // 1
     vertices.push_back({
         { 0.0f, 0.5f, 0.0f }   
     });
+
+    vertices.push_back({
+        { -0.5f, -0.5f, 0.5f }
+    });
+
+    vertices.push_back({
+        { 0.5f, -0.5f, 0.5f }   
+    });
+
+    // 2
+    vertices.push_back({
+        { 0.0f, 0.5f, 0.0f }   
+    });
+
+    vertices.push_back({
+        { -0.5f, -0.5f, 0.5f }
+    });
+
+    vertices.push_back({
+        { -0.5f, -0.5f, -0.5f }
+    });
+
+    // 3
+    vertices.push_back({
+        { 0.0f, 0.5f, 0.0f }   
+    });
+
+    vertices.push_back({
+        { 0.5f, -0.5f, -0.5f }   
+    });
+
+    vertices.push_back({
+        { -0.5f, -0.5f, -0.5f }
+    });
+
+    // 4
+    vertices.push_back({
+        { 0.0f, 0.5f, 0.0f }   
+    });
+
+    vertices.push_back({
+        { 0.5f, -0.5f, -0.5f }
+    });
+
+    vertices.push_back({
+        { 0.5f, -0.5f, 0.5f }
+    });
+
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -82,38 +123,59 @@ std::string get_shader(const char * fileName) {
 }
 
 
-float getNextIndex(int index, bool decrease = false) {
-    const int max = 180;
-    const int min = -180;
+float getNextIndex(int index) {
+    const int max = 360;
+    const int min = 0;
 
-    int next = decrease ? index - 1 : index + 1;
+    int next = index + 1;
 
     if (next == max) {
         return min;
     } 
 
-    if (next == max) {
-        return min;
-    }
-
     return (float)next;
 }
 
 
-void animate(std::vector<Vertex> & vertices, int & bottom1Index, int & bottom2Index) {
-    Vertex * bottom1 = &vertices[0];
-    Vertex * bottom2 = &vertices[1];
+void animate(std::vector<Vertex> & vertices, int & animationIndex) {
+    const float PI = 3.14f;
 
-    bool swapDecreasing = bottom1Index < 0;
+    Vertex * triangle1_1 = &vertices[1];
+    Vertex * triangle1_2 = &vertices[2];
 
-    bottom1Index = getNextIndex(bottom1Index, swapDecreasing);
-    bottom2Index = getNextIndex(bottom2Index, !swapDecreasing);
- 
-    float bottom1NewVertical = std::sin(2.0f * 3.14f * (bottom1Index/(float)360)) / 2;
-    float bottom2NewVertical = std::sin(2.0f * 3.14f * (bottom2Index/(float)360)) / 2;
+    Vertex * triangle2_1 = &vertices[4];
+    Vertex * triangle2_2 = &vertices[5];
 
-    bottom1->position[0] = bottom1NewVertical;
-    bottom2->position[0] = bottom2NewVertical;
+    Vertex * triangle3_1 = &vertices[7];
+    Vertex * triangle3_2 = &vertices[8];
+
+    Vertex * triangle4_1 = &vertices[10];
+    Vertex * triangle4_2 = &vertices[11];
+
+    animationIndex = getNextIndex(animationIndex);
+
+    triangle1_1->position[0] = std::sin(2.0f * PI * ((animationIndex - 45)/(float)360)) * 0.5f;
+    triangle1_1->position[2] = std::cos(2.0f * PI * ((animationIndex - 45)/(float)360)) * 0.5f;
+    triangle1_2->position[0] = std::sin(2.0f * PI * ((animationIndex + 45)/(float)360)) * 0.5f;
+    triangle1_2->position[2] = std::cos(2.0f * PI * ((animationIndex + 45)/(float)360)) * 0.5f;
+
+    triangle2_1->position[0] = std::sin(2.0f * PI * ((animationIndex + 45)/(float)360)) * 0.5f;
+    triangle2_1->position[2] = std::cos(2.0f * PI * ((animationIndex + 45)/(float)360)) * 0.5f;
+    triangle2_2->position[0] = std::sin(2.0f * PI * ((animationIndex + 135)/(float)360)) * 0.5f;
+    triangle2_2->position[2] = std::cos(2.0f * PI * ((animationIndex + 135)/(float)360)) * 0.5f;
+
+    triangle3_1->position[0] = std::sin(2.0f * PI * ((animationIndex + 135)/(float)360)) * 0.5f;
+    triangle3_1->position[2] = std::cos(2.0f * PI * ((animationIndex + 135)/(float)360)) * 0.5f;
+    triangle3_2->position[0] = std::sin(2.0f * PI * ((animationIndex - 135)/(float)360)) * 0.5f;
+    triangle3_2->position[2] = std::cos(2.0f * PI * ((animationIndex - 135)/(float)360)) * 0.5f;
+
+    triangle4_1->position[0] = std::sin(2.0f * PI * ((animationIndex - 135)/(float)360)) * 0.5f;
+    triangle4_1->position[2] = std::cos(2.0f * PI * ((animationIndex - 135)/(float)360)) * 0.5f;
+    triangle4_2->position[0] = std::sin(2.0f * PI * ((animationIndex - 45)/(float)360)) * 0.5f;
+    triangle4_2->position[2] = std::cos(2.0f * PI * ((animationIndex - 45)/(float)360)) * 0.5f;
+
+    printf("blue triangle z-indeces: %f, %f\n", triangle1_1->position[2], triangle1_2->position[2]);
+    printf("red triangle z-indeces: %f, %f\n", triangle3_1->position[2], triangle3_2->position[2]);
 }
 
 
@@ -201,11 +263,13 @@ int main(void) {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
     glEnableVertexAttribArray(0);
 
-    int bottom1Index = 0; 
-    int bottom2Index = 0; 
+    int animationIndex = 0; 
+
+    GLint uniform;
+    glUseProgram(shaderProgram);
 
     while (!glfwWindowShouldClose(window)) {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
@@ -213,18 +277,16 @@ int main(void) {
 
         glClearColor(0.0f, 5.0f, 1.0f, 1.0f);
 
-        animate(vertices, bottom1Index, bottom2Index);
+        animate(vertices, animationIndex);
 
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
 
-        glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
+        uniform = glGetUniformLocation(shaderProgram, "triangleColor");
 
-
+        glUniform3f(uniform, 0.0f, 0.0f, 1.0f);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        glfwSwapBuffers(window);                
+        glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
