@@ -1,8 +1,9 @@
 #version 420 core
+
+layout (location = 1) in vec3 color;
 out vec4 FragColor;
-uniform vec3 triangleColor;
 
 void main()
 {
-    FragColor = vec4(triangleColor, 1.0f);
+   FragColor = vec4(color.x, color.y, color.z, 1.0f);
 } 

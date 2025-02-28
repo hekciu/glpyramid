@@ -15,8 +15,29 @@
 #define FRAGMENT_SHADER_FILE_PATH "fragment_shader.frag"
 
 
-struct Vertex {
-    float position[3];
+struct Point {
+    float x;
+    float y;
+    float z;
+};
+
+
+struct Color {
+    float r;
+    float g;
+    float b;
+};
+
+
+struct Triangle {
+    Point p1;
+    Color c1;
+
+    Point p2;
+    Color c2;
+
+    Point p3;
+    Color c3;
 };
 
 
@@ -38,67 +59,44 @@ void handle_key(GLFWwindow * window, int key, int scancode, int action, int mods
 };
 
 
-void initialize_vertices(std::vector<Vertex> & vertices, uint32_t & VBO) {
-    // 1
-    vertices.push_back({
-        { 0.0f, 0.5f, 0.0f }   
-    });
+void initialize_data(std::vector<Triangle> & triangles, uint32_t & VBO) {
+    Triangle t1, t2, t3, t4;
 
-    vertices.push_back({
-        { -0.5f, -0.5f, 0.5f }
-    });
+    t1.p1 = { 0.0f, 0.5f, 0.0f };
+    t1.p2 = { -0.5f, -0.5f, 0.5f };
+    t1.p3 = { 0.5f, -0.5f, 0.5f };
+    t1.c1 = { 1.0f, 0.0f, 0.0f };
+    t1.c2 = { 1.0f, 0.0f, 0.0f };
+    t1.c3 = { 1.0f, 0.0f, 0.0f };
 
-    vertices.push_back({
-        { 0.5f, -0.5f, 0.5f }   
-    });
+    t2.p1 = { 0.0f, 0.5f, 0.0f };
+    t2.p2 = { -0.5f, -0.5f, 0.5f };
+    t2.p3 = { -0.5f, -0.5f, -0.5f };
+    t2.c1 = { 0.0f, 1.0f, 0.0f };
+    t2.c2 = { 0.0f, 1.0f, 0.0f };
+    t2.c3 = { 0.0f, 1.0f, 0.0f };
 
-    // 2
-    vertices.push_back({
-        { 0.0f, 0.5f, 0.0f }   
-    });
+    t3.p1 = { 0.0f, 0.5f, 0.0f };
+    t3.p2 = { 0.5f, -0.5f, -0.5f };
+    t3.p3 = { -0.5f, -0.5f, -0.5f };
+    t3.c1 = { 0.0f, 0.0f, 1.0f };
 
-    vertices.push_back({
-        { -0.5f, -0.5f, 0.5f }
-    });
+    t4.p1 = { 0.0f, 0.5f, 0.0f };
+    t4.p2 = { 0.5f, -0.5f, -0.5f };
+    t4.p3 = { 0.5f, -0.5f, 0.5f };
+    t4.c1 = { 0.0f, 1.0f, 0.5f };
 
-    vertices.push_back({
-        { -0.5f, -0.5f, -0.5f }
-    });
-
-    // 3
-    vertices.push_back({
-        { 0.0f, 0.5f, 0.0f }   
-    });
-
-    vertices.push_back({
-        { 0.5f, -0.5f, -0.5f }   
-    });
-
-    vertices.push_back({
-        { -0.5f, -0.5f, -0.5f }
-    });
-
-    // 4
-    vertices.push_back({
-        { 0.0f, 0.5f, 0.0f }   
-    });
-
-    vertices.push_back({
-        { 0.5f, -0.5f, -0.5f }
-    });
-
-    vertices.push_back({
-        { 0.5f, -0.5f, 0.5f }
-    });
-
+    triangles.push_back(t1);
+    triangles.push_back(t2);
+    triangles.push_back(t3);
+    triangles.push_back(t4);
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-    Vertex * rawVertices = vertices.data();
-    size_t verticesSize = vertices.size() * sizeof(Vertex);
+    size_t trianglesSize = triangles.size() * sizeof(Triangle);
 
-    glBufferData(GL_ARRAY_BUFFER, verticesSize, rawVertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, trianglesSize, triangles.data(), GL_STATIC_DRAW);
 };
 
 
@@ -137,45 +135,43 @@ float getNextIndex(int index) {
 }
 
 
-void animate(std::vector<Vertex> & vertices, int & animationIndex) {
+void animate(std::vector<Triangle> & triangles, int & animationIndex) {
     const float PI = 3.14f;
 
-    Vertex * triangle1_1 = &vertices[1];
-    Vertex * triangle1_2 = &vertices[2];
+    Point * triangle1_1 = &triangles[0].p2;
+    Point * triangle1_2 = &triangles[0].p3;
 
-    Vertex * triangle2_1 = &vertices[4];
-    Vertex * triangle2_2 = &vertices[5];
+    Point * triangle2_1 = &triangles[1].p1;
+    Point * triangle2_2 = &triangles[1].p2;
 
-    Vertex * triangle3_1 = &vertices[7];
-    Vertex * triangle3_2 = &vertices[8];
+    Point * triangle3_1 = &triangles[2].p1;
+    Point * triangle3_2 = &triangles[2].p2;
 
-    Vertex * triangle4_1 = &vertices[10];
-    Vertex * triangle4_2 = &vertices[11];
+    Point * triangle4_1 = &triangles[3].p1;
+    Point * triangle4_2 = &triangles[3].p2;
 
     animationIndex = getNextIndex(animationIndex);
 
-    triangle1_1->position[0] = std::sin(2.0f * PI * ((animationIndex - 45)/(float)360)) * 0.5f;
-    triangle1_1->position[2] = std::cos(2.0f * PI * ((animationIndex - 45)/(float)360)) * 0.5f;
-    triangle1_2->position[0] = std::sin(2.0f * PI * ((animationIndex + 45)/(float)360)) * 0.5f;
-    triangle1_2->position[2] = std::cos(2.0f * PI * ((animationIndex + 45)/(float)360)) * 0.5f;
+    triangle1_1->x = std::sin(2.0f * PI * ((animationIndex - 45)/(float)360)) * 0.5f;
+    triangle1_1->z = std::cos(2.0f * PI * ((animationIndex - 45)/(float)360)) * 0.5f;
+    triangle1_2->x = std::sin(2.0f * PI * ((animationIndex + 45)/(float)360)) * 0.5f;
+    triangle1_2->z = std::cos(2.0f * PI * ((animationIndex + 45)/(float)360)) * 0.5f;
+    triangle2_1->x = std::sin(2.0f * PI * ((animationIndex + 45)/(float)360)) * 0.5f;
+    triangle2_1->z = std::cos(2.0f * PI * ((animationIndex + 45)/(float)360)) * 0.5f;
+    triangle2_2->x = std::sin(2.0f * PI * ((animationIndex + 135)/(float)360)) * 0.5f;
+    triangle2_2->z = std::cos(2.0f * PI * ((animationIndex + 135)/(float)360)) * 0.5f;
 
-    triangle2_1->position[0] = std::sin(2.0f * PI * ((animationIndex + 45)/(float)360)) * 0.5f;
-    triangle2_1->position[2] = std::cos(2.0f * PI * ((animationIndex + 45)/(float)360)) * 0.5f;
-    triangle2_2->position[0] = std::sin(2.0f * PI * ((animationIndex + 135)/(float)360)) * 0.5f;
-    triangle2_2->position[2] = std::cos(2.0f * PI * ((animationIndex + 135)/(float)360)) * 0.5f;
+    /*
+    triangle3_1->x = std::sin(2.0f * PI * ((animationIndex + 135)/(float)360)) * 0.5f;
+    triangle3_1->z = std::cos(2.0f * PI * ((animationIndex + 135)/(float)360)) * 0.5f;
+    triangle3_2->x = std::sin(2.0f * PI * ((animationIndex - 135)/(float)360)) * 0.5f;
+    triangle3_2->z = std::cos(2.0f * PI * ((animationIndex - 135)/(float)360)) * 0.5f;
 
-    triangle3_1->position[0] = std::sin(2.0f * PI * ((animationIndex + 135)/(float)360)) * 0.5f;
-    triangle3_1->position[2] = std::cos(2.0f * PI * ((animationIndex + 135)/(float)360)) * 0.5f;
-    triangle3_2->position[0] = std::sin(2.0f * PI * ((animationIndex - 135)/(float)360)) * 0.5f;
-    triangle3_2->position[2] = std::cos(2.0f * PI * ((animationIndex - 135)/(float)360)) * 0.5f;
-
-    triangle4_1->position[0] = std::sin(2.0f * PI * ((animationIndex - 135)/(float)360)) * 0.5f;
-    triangle4_1->position[2] = std::cos(2.0f * PI * ((animationIndex - 135)/(float)360)) * 0.5f;
-    triangle4_2->position[0] = std::sin(2.0f * PI * ((animationIndex - 45)/(float)360)) * 0.5f;
-    triangle4_2->position[2] = std::cos(2.0f * PI * ((animationIndex - 45)/(float)360)) * 0.5f;
-
-    printf("blue triangle z-indeces: %f, %f\n", triangle1_1->position[2], triangle1_2->position[2]);
-    printf("red triangle z-indeces: %f, %f\n", triangle3_1->position[2], triangle3_2->position[2]);
+    triangle4_1->x = std::sin(2.0f * PI * ((animationIndex - 135)/(float)360)) * 0.5f;
+    triangle4_1->z = std::cos(2.0f * PI * ((animationIndex - 135)/(float)360)) * 0.5f;
+    triangle4_2->x = std::sin(2.0f * PI * ((animationIndex - 45)/(float)360)) * 0.5f;
+    triangle4_2->z = std::cos(2.0f * PI * ((animationIndex - 45)/(float)360)) * 0.5f;
+    */
 }
 
 
@@ -200,12 +196,6 @@ int main(void) {
 
     glfwSetKeyCallback(window, handle_key);
 
-    std::vector<Vertex> vertices = {};
-
-    uint32_t VBO;
-
-    initialize_vertices(vertices, VBO); 
-
     std::string vertexShaderSource = get_shader(VERTEX_SHADER_FILE_PATH);
     const char * vertexShaderSourceRaw = vertexShaderSource.c_str();
 
@@ -222,7 +212,7 @@ int main(void) {
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &compiledSuccessfully);
     if (!compiledSuccessfully) {
         glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        printf("Shader compilation failed, info: %s\n", infoLog);
+        printf("Vertex shader compilation failed, info: %s\n", infoLog);
         return 1;
     }
 
@@ -233,7 +223,7 @@ int main(void) {
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compiledSuccessfully);
     if (!compiledSuccessfully) {
         glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        printf("Shader compilation failed, info: %s\n", infoLog);
+        printf("Fragment shader compilation failed, info: %s\n", infoLog);
         return 1;
     }
 
@@ -253,20 +243,33 @@ int main(void) {
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
+
+    std::vector<Triangle> triangles = {};
+
+    uint32_t VBO;
+
+    initialize_data(triangles, VBO); 
+
     uint32_t VAO;
     glGenVertexArrays(1, &VAO);
     
     glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, triangles.size() * sizeof(Triangle), triangles.data(), GL_DYNAMIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Point) + sizeof(Color), (void *)0);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Point) + sizeof(Color), (void *)sizeof(Point));
+
+
     glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
 
     int animationIndex = 0; 
 
-    GLint uniform;
     glUseProgram(shaderProgram);
+
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -277,14 +280,11 @@ int main(void) {
 
         glClearColor(0.0f, 5.0f, 1.0f, 1.0f);
 
-        animate(vertices, animationIndex);
+        animate(triangles, animationIndex);
 
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, triangles.size() * sizeof(triangles), triangles.data(), GL_DYNAMIC_DRAW);
 
-        uniform = glGetUniformLocation(shaderProgram, "triangleColor");
-
-        glUniform3f(uniform, 0.0f, 0.0f, 1.0f);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
