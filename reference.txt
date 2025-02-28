@@ -1,1 +1,3 @@
 - https://learnopengl.com/getting-started/hello-triangle
+- https://learnopengl.com/getting-started/shaders
+- https://learnopengl.com/Getting-started/Coordinate-Systems
