@@ -80,11 +80,15 @@ void initialize_data(std::vector<Triangle> & triangles, uint32_t & VBO) {
     t3.p2 = { 0.5f, -0.5f, -0.5f };
     t3.p3 = { -0.5f, -0.5f, -0.5f };
     t3.c1 = { 0.0f, 0.0f, 1.0f };
+    t3.c2 = { 0.0f, 0.0f, 1.0f };
+    t3.c3 = { 0.0f, 0.0f, 1.0f };
 
     t4.p1 = { 0.0f, 0.5f, 0.0f };
     t4.p2 = { 0.5f, -0.5f, -0.5f };
     t4.p3 = { 0.5f, -0.5f, 0.5f };
-    t4.c1 = { 0.0f, 1.0f, 0.5f };
+    t4.c1 = { 1.0f, 1.0f, 0.0f };
+    t4.c2 = { 1.0f, 1.0f, 0.0f };
+    t4.c3 = { 1.0f, 1.0f, 0.0f };
 
     triangles.push_back(t1);
     triangles.push_back(t2);
@@ -141,14 +145,14 @@ void animate(std::vector<Triangle> & triangles, int & animationIndex) {
     Point * triangle1_1 = &triangles[0].p2;
     Point * triangle1_2 = &triangles[0].p3;
 
-    Point * triangle2_1 = &triangles[1].p1;
-    Point * triangle2_2 = &triangles[1].p2;
+    Point * triangle2_1 = &triangles[1].p2;
+    Point * triangle2_2 = &triangles[1].p3;
 
-    Point * triangle3_1 = &triangles[2].p1;
-    Point * triangle3_2 = &triangles[2].p2;
+    Point * triangle3_1 = &triangles[2].p2;
+    Point * triangle3_2 = &triangles[2].p3;
 
-    Point * triangle4_1 = &triangles[3].p1;
-    Point * triangle4_2 = &triangles[3].p2;
+    Point * triangle4_1 = &triangles[3].p2;
+    Point * triangle4_2 = &triangles[3].p3;
 
     animationIndex = getNextIndex(animationIndex);
 
@@ -156,12 +160,12 @@ void animate(std::vector<Triangle> & triangles, int & animationIndex) {
     triangle1_1->z = std::cos(2.0f * PI * ((animationIndex - 45)/(float)360)) * 0.5f;
     triangle1_2->x = std::sin(2.0f * PI * ((animationIndex + 45)/(float)360)) * 0.5f;
     triangle1_2->z = std::cos(2.0f * PI * ((animationIndex + 45)/(float)360)) * 0.5f;
+
     triangle2_1->x = std::sin(2.0f * PI * ((animationIndex + 45)/(float)360)) * 0.5f;
     triangle2_1->z = std::cos(2.0f * PI * ((animationIndex + 45)/(float)360)) * 0.5f;
     triangle2_2->x = std::sin(2.0f * PI * ((animationIndex + 135)/(float)360)) * 0.5f;
     triangle2_2->z = std::cos(2.0f * PI * ((animationIndex + 135)/(float)360)) * 0.5f;
 
-    /*
     triangle3_1->x = std::sin(2.0f * PI * ((animationIndex + 135)/(float)360)) * 0.5f;
     triangle3_1->z = std::cos(2.0f * PI * ((animationIndex + 135)/(float)360)) * 0.5f;
     triangle3_2->x = std::sin(2.0f * PI * ((animationIndex - 135)/(float)360)) * 0.5f;
@@ -171,7 +175,6 @@ void animate(std::vector<Triangle> & triangles, int & animationIndex) {
     triangle4_1->z = std::cos(2.0f * PI * ((animationIndex - 135)/(float)360)) * 0.5f;
     triangle4_2->x = std::sin(2.0f * PI * ((animationIndex - 45)/(float)360)) * 0.5f;
     triangle4_2->z = std::cos(2.0f * PI * ((animationIndex - 45)/(float)360)) * 0.5f;
-    */
 }
 
 
@@ -270,9 +273,10 @@ int main(void) {
 
     glUseProgram(shaderProgram);
 
+    glEnable(GL_DEPTH_TEST);
 
     while (!glfwWindowShouldClose(window)) {
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
@@ -282,9 +286,9 @@ int main(void) {
 
         animate(triangles, animationIndex);
 
-        glBufferData(GL_ARRAY_BUFFER, triangles.size() * sizeof(triangles), triangles.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, triangles.size() * sizeof(Triangle), triangles.data(), GL_DYNAMIC_DRAW);
 
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawArrays(GL_TRIANGLES, 0, 12);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
